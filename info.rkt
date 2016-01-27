@@ -7,4 +7,4 @@
 (define test-include-paths '("test"))
 (define pkg-desc "Description Here")
 (define version "0.0")
-(define pkg-authors '(sdmoore))
+(define pkg-authors '("Scott Moore"))

@@ -10,7 +10,7 @@
        the-eval)))
 
 @title{bounded}
-@author{sdmoore}
+@author{Scott Moore}
 
 @defmodule[bounded]
 
