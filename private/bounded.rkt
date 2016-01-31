@@ -65,6 +65,10 @@
 (define-values (bounded-∀∃ bounded-∀∃? bounded-∀∃-accessor)
   (make-impersonator-property 'forall-exists))
 
+(define (get-struct-type val)
+  (let-values ([(type skipped) (struct-info val)])
+    type))
+
 (define (make-in property)
   (lambda (ctc blame val)
     (let* ([contracted (((contract-projection ctc) blame) val)]
@@ -74,7 +78,7 @@
               [(procedure? val)
                (chaperone-procedure contracted #f bounded-∀∃ #t property (list val contracted wrapped))]
               [(struct? val)
-               (chaperone-struct contracted property (list val contracted wrapped))]
+               (chaperone-struct contracted (get-struct-type val) property (list val contracted wrapped))]
               [(vector? val)
                (chaperone-vector contracted
                                  (λ (vec ind get) get)

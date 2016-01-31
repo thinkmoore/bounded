@@ -49,10 +49,18 @@ static Scheme_Object *remove_impersonator(int argc, Scheme_Object **argv)
   }
 
   Scheme_Chaperone *imp = (Scheme_Chaperone *)impersonator;
-  if (imp->prev != orig) {
+  if (scheme_apply(impersonator_of, 2, (Scheme_Object *[]) { value, impersonator }) == scheme_false) {
     scheme_contract_error("remove-impersonator",
-			  "impersonator must directly impersonate original value",
-			  "value", 1, impersonator,
+			  "impersonator must impersonate original value",
+			  "impersonator", 1, impersonator,
+			  "original", 1, orig,
+			  NULL);
+    return NULL;
+  }
+  if (impersonator == orig) {
+    scheme_contract_error("remove-impersonator",
+			  "cannot remove impersonator from itself",
+			  "impersonator", 1, impersonator,
 			  "original", 1, orig,
 			  NULL);
     return NULL;
