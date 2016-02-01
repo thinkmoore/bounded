@@ -1,5 +1,6 @@
 #lang racket
 
-(require "private/bounded.rkt")
-(provide (all-from-out "private/bounded.rkt"))
+(require "private/bounded.rkt" "private/opaque-object.rkt")
+(provide (all-from-out "private/bounded.rkt")
+         (all-from-out "private/opaque-object.rkt"))
 

@@ -1,12 +1,14 @@
 #lang scribble/manual
 @require[@for-label[bounded
-                    racket/base]]
+                    racket/base
+		    racket/class]]
 @require[scribble/eval]
 
 @(define contract-eval
    (lambda ()
      (let ([the-eval (make-base-eval)])
-       (the-eval '(require racket/contract bounded "private/bounded-impersonator-util.rkt"))
+       (the-eval '(require racket/contract racket/class bounded
+                           "private/bounded-impersonator-util.rkt"))
        the-eval)))
 
 @title{bounded}
@@ -59,14 +61,75 @@ To correctly enforce blame, additional contracts applied to values flowing throu
 
 }
 
-@defmodule["private/bounded-impersonator-util.rkt"]
+@defform/subs[
+#:literals (field)
+
+(object/c-opaque member-spec ...)
+
+([member-spec
+  method-spec
+  (field field-spec ...)]
+ 
+ [method-spec
+  method-id
+  (method-id method-contract)]
+ [field-spec
+  field-id
+  (field-id contract-expr)])]{
+Like @racket[object/c], produces a contract for an object. Unlike @racket[object/c],
+fields and methods not named in the contract are not accessible via the contracted object.
+This contract was adapted from Typed Racket's object type contracts.
+
+@examples[#:eval (contract-eval)
+(define one-method%
+  (class object%
+    (define/public (foo) 'foo)
+    (super-new)))
+
+(define two-method%
+  (class one-method%
+    (inherit foo)
+    (define/public (bar) 'bar)
+    (super-new)))
+
+(define one (new one-method%))
+(define two (new two-method%))
+
+(define/contract (use-one obj)
+  (-> (object/c-opaque (foo (->m symbol?))) any/c)
+  (send obj foo)
+  obj)
+(define/contract (use-two obj)
+  (-> (object/c-opaque (foo (->m symbol?))) any/c)
+  (send obj bar)
+  obj)
+(define/contract (use-one-poly obj)
+  (bounded-polymorphic->/c
+    ([X (object/c-opaque (foo (->m symbol?)))])
+    (-> X X))
+  (send obj foo)
+  obj)
+(define/contract (use-two-poly obj)
+  (bounded-polymorphic->/c
+    ([X (object/c-opaque (foo (->m symbol?)))])
+    (-> X X))
+  (send obj bar)
+  obj)
+(use-one-poly one)
+(use-one-poly two)
+(use-two-poly one)
+(use-two-poly two)
+(send (use-one two) bar)
+(send (use-one-poly two) bar)
+]
+}
 
 @defform[(remove-impersonator value impersonator original)]{
 
-Returns @racket[value] with @racket[impersonator] removed from the
+Not exported. Returns @racket[value] with @racket[impersonator] removed from the
 chain of impersonators wrapping @racket[value]. @racket[value] must be
 an impersonator of (or equal to) @racket[impersonator]. @racket[impersonator]
-must directly impersonate @racket[original], which is provided as a witness
+must also impersonate @racket[original], which is provided as a witness
 that the caller has access to the impersonated value. (Note: replace witness
 requirement with appropriate code-inspector?)
 
