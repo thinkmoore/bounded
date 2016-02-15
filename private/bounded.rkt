@@ -128,7 +128,9 @@
                                                 (λ (v) v)
                                                 (λ (v) v)
                                                 bounded-∀∃ #t
-                                                property (list val contracted wrapped))])])
+                                                property (list val contracted wrapped))]
+              [else
+               (chaperone-opaque-struct contracted property (list val contracted wrapped))])])      
       (set-box! wrapped chaperone)
       chaperone)))
 
@@ -141,17 +143,19 @@
          uncontracted)])))
 
 (define (mk raw-name neg? bound)
-  (unless (and (contract? bound)
-               (not (flat-contract? bound)))
+  (unless (contract? bound)
     (raise-argument-error (if neg? 'new-bounded-∃/c 'new-bounded-∀/c)
-                          "higher-order contract"
-                          bound))
-  (define name (string->symbol (format "~a/~a" raw-name (if neg? "∃" "∀"))))
-  (define-values (property predicate accessor)
-    (make-impersonator-property name))
-  (let ([constructor (make-in property)]
-        [destructor (make-out accessor)])
-    (make-bounded-∀∃/c constructor destructor predicate raw-name neg? bound)))
+                          "contract?" bound))
+  (let ([bound-ctc (if (flat-contract? bound) (flat-contract bound) bound)])
+    (define name (string->symbol (format "~a/~a" raw-name (if neg? "∃" "∀"))))
+    (define-values (constructor destructor predicate)
+      (if (flat-contract? bound-ctc)
+          (values (λ (bound blame val) val) (λ (val) val) (λ (val) (contract-first-order-passes? bound-ctc val)))
+          (let*-values ([(property predicate accessor) (make-impersonator-property name)]
+                        [(constructor) (make-in property)]
+                        [(destructor) (make-out accessor)])
+            (values constructor destructor predicate))))
+    (make-bounded-∀∃/c constructor destructor predicate raw-name neg? bound-ctc)))
 
 (define-syntax (bounded-polymorphic->/c stx)
   (syntax-case stx ()

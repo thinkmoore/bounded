@@ -33,6 +33,22 @@
   (check-not-exn (λ () ((as-integer-good id) 'foo))))
 
 (test-case
+    "bound-flat-good"
+  (define/contract (incr n)
+    (bounded-polymorphic->/c ([X integer?])
+                             (-> X X))
+    (+ n 1))
+  (check-not-exn (λ () (incr 0))))
+
+(test-case
+    "bound-flat-bad"
+  (define/contract (incr n)
+    (bounded-polymorphic->/c ([X integer?])
+                             (-> X X))
+    'foo)
+  (check-exn exn:fail:contract? (λ () (incr 0))))
+
+(test-case
     "enforce contracts"
   (define (id x) x)
   (define/contract (coerce-to-string fn)
@@ -47,7 +63,7 @@
 
 (test-case
     "first-order"
-  (check-exn exn:fail:contract?
+  (check-not-exn
              (λ () (let ()
                      (define/contract (add x y)
                        (bounded-polymorphic->/c ([X integer?])
