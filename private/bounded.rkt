@@ -1,7 +1,6 @@
 #lang racket/base
 
-(require racket/contract racket/match)
-(require "bounded-impersonator-util.rkt")
+(require racket/contract racket/match racket/unsafe/chaperones)
 
 (require (for-syntax racket/base syntax/name))
 
@@ -138,8 +137,8 @@
   (lambda (val)
     (match (property-accessor val)
       [(list orig contracted (box wrapped))
-       (let* ([unwrapped (remove-impersonator val wrapped contracted)]
-              [uncontracted (remove-impersonator unwrapped contracted orig)])
+       (let* ([unwrapped (remove-impersonators val wrapped contracted)]
+              [uncontracted (remove-impersonators unwrapped contracted orig)])
          uncontracted)])))
 
 (define (mk raw-name neg? bound)

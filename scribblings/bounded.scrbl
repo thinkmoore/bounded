@@ -7,8 +7,7 @@
 @(define contract-eval
    (lambda ()
      (let ([the-eval (make-base-eval)])
-       (the-eval '(require racket/contract racket/class bounded
-                           "private/bounded-impersonator-util.rkt"))
+       (the-eval '(require racket/contract racket/class bounded))
        the-eval)))
 
 @title{bounded}
@@ -121,30 +120,5 @@ This contract was adapted from Typed Racket's object type contracts.
 (use-two-poly two)
 (send (use-one two) bar)
 (send (use-one-poly two) bar)
-]
-}
-
-@defform[(remove-impersonator value impersonator original)]{
-
-Not exported. Returns @racket[value] with @racket[impersonator] removed from the
-chain of impersonators wrapping @racket[value]. @racket[value] must be
-an impersonator of (or equal to) @racket[impersonator]. @racket[impersonator]
-must also impersonate @racket[original], which is provided as a witness
-that the caller has access to the impersonated value. (Note: replace witness
-requirement with appropriate code-inspector?)
-
-@examples[#:eval (contract-eval)
-(define (id x) x)
-(define/contract id-int
-  (integer? . -> . integer?)
-  id)
-(define/contract id-int-fun
-  (any/c . -> . any/c)
-  id-int)
-(define removed
-  (remove-impersonator id-int-fun id-int id))
-(id-int 'bad)
-(id-int-fun 'bad)
-(removed 'ok)
 ]
 }
